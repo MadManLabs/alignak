@@ -27,28 +27,51 @@ RUN adduser --system $ALIGNAK_USER --ingroup $ALIGNAK_GROUP
 
 # Create a configuration directory
 ARG ALIGNAK_ETC_DIR=/alignak/etc
-RUN mkdir -p $ALIGNAK_ETC_DIR
-RUN chown $ALIGNAK_GROUP:$ALIGNAK_USER $ALIGNAK_ETC_DIR
+RUN mkdir -p $ALIGNAK_ETC_DIR && chown $ALIGNAK_USER:$ALIGNAK_GROUP $ALIGNAK_ETC_DIR
 
 # Create a log directory
 ARG ALIGNAK_LOG_DIR=/alignak/log
-RUN mkdir -p $ALIGNAK_LOG_DIR
-RUN chown $ALIGNAK_GROUP:$ALIGNAK_USER $ALIGNAK_LOG_DIR
+RUN mkdir -p $ALIGNAK_LOG_DIR && chown $ALIGNAK_USER:$ALIGNAK_GROUP $ALIGNAK_LOG_DIR
 
 # Create a working directory
 ARG ALIGNAK_RUN_DIR=/alignak/run
-RUN mkdir -p $ALIGNAK_RUN_DIR
-RUN chown $ALIGNAK_GROUP:$ALIGNAK_USER $ALIGNAK_RUN_DIR
+RUN mkdir -p $ALIGNAK_RUN_DIR && chown $ALIGNAK_USER:$ALIGNAK_GROUP $ALIGNAK_RUN_DIR
+
+# Location for the git repositories
+RUN mkdir -p /repos && cd /repos
 
 # Get the Alignak repository on develop branch
-RUN mkdir /repos && \
-    cd /repos && \
-    git clone https://github.com/Alignak-monitoring/alignak && \
+RUN cd /usr/local/src && \
+    git clone https://github.com/alignak-monitoring/alignak && \
     cd alignak && \
     git checkout develop && \
     pip install .
 
+# Get the Shinken / Alignak Web UI
+RUN mkdir /usr/local/lib/python2.7/site-packages/alignak_webui
+RUN cd /usr/local/src && \
+    git clone https://github.com/mohierf/mod-webui && \
+    cd mod-webui && \
+    git checkout integ && \
+    cp -R module/* /usr/local/lib/python2.7/site-packages/alignak_webui
+
+RUN pip install shinken bottle
+
+RUN apt-get install -y --no-install-recommends \
+    python-bottle \
+    python-pycurl \
+    python-pymongo
+
+# For the Web UI modules
+RUN mkdir -p /var/lib/shinken/module
+
 USER $ALIGNAK_USER
 
+## Install shinken modules from shinken.io
+#RUN chown -R $ALIGNAK_USER:$ALIGNAK_GROUP /etc/shinken/ && \
+#    su - shinken -c 'shinken --init' && \
+#    su - shinken -c 'shinken install graphite2' && \
+#    su - shinken -c 'shinken install ui-graphite2'
+#
 # Run the arbiter in check mode for the configuration in the Alignak directory
 CMD ["alignak-arbiter", "-V", "-e", "/repos/alignak/etc/alignak.ini" ]
