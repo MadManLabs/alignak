@@ -48,5 +48,7 @@ RUN mkdir /repos && \
     git checkout develop && \
     pip install .
 
+USER $ALIGNAK_USER
+
 # Run the arbiter in check mode for the configuration in the Alignak directory
 CMD ["alignak-arbiter", "-V", "-e", "/repos/alignak/etc/alignak.ini" ]

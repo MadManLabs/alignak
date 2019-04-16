@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   # Alignak
-  alignak-arbiter:
+  arbiter:
     image: alignak
     build:
       context: .
@@ -12,19 +12,90 @@ services:
         ALIGNAK_RUN_DIR: /alignak/run
     env_file:
       - .env
+#    environment:
+#      DEBUG: "-vv"
+    networks:
+      - alignak
+    ports:
+      - "7770:7770"
     volumes:
-      - ${ALIGNAK_DATADIR}:/alignak:rw
-    command: "alignak-arbiter -vv -e ${ALIGNAK_CONFIGURATION_FILE}"
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-arbiter -e ${ALIGNAK_CONFIGURATION_FILE}"
 
-  alignak-scheduler-master:
+  scheduler-master:
     image: alignak
     env_file:
       - .env
+    networks:
+      - alignak
+    ports:
+      - "7768:7768"
     volumes:
-      - ${ALIGNAK_DATADIR}:/alignak:rw
+      - ${ALIGNAK_DATADIR}:/alignak
     command: "alignak-scheduler -e ${ALIGNAK_CONFIGURATION_FILE} -n scheduler-master"
 
+  scheduler-master2:
+    image: alignak
+    env_file:
+      - .env
+    networks:
+      - alignak
+    ports:
+      - "17768:7768"
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-scheduler -e ${ALIGNAK_CONFIGURATION_FILE} -n scheduler-master2"
+
+  reactionner-master:
+    image: alignak
+    env_file:
+      - .env
+    networks:
+      - alignak
+    ports:
+      - "7769:7769"
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-reactionner -e ${ALIGNAK_CONFIGURATION_FILE} -n reactionner-master"
+
+  poller-master:
+    image: alignak
+    env_file:
+      - .env
+    networks:
+      - alignak
+    ports:
+      - "7771:7771"
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-poller -e ${ALIGNAK_CONFIGURATION_FILE} -n poller-master"
+
+  broker-master:
+    image: alignak
+    env_file:
+      - .env
+    networks:
+      - alignak
+    ports:
+      - "7772:7772"
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-broker -e ${ALIGNAK_CONFIGURATION_FILE} -n broker-master"
+
+  receiver-master:
+    image: alignak
+    env_file:
+      - .env
+    networks:
+      - alignak
+    ports:
+      - "7773:7773"
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak
+    command: "alignak-receiver -e ${ALIGNAK_CONFIGURATION_FILE} -n receiver-master"
+
 networks:
+  alignak:
   default:
     external:
       name: ${PROXY_NETWORK}
