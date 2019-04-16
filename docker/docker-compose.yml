@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  # Alignak
+  alignak-arbiter:
+    image: alignak
+    build:
+      context: .
+      args:
+        ALIGNAK_ETC_DIR: /alignak/etc
+        ALIGNAK_LOG_DIR: /alignak/log
+        ALIGNAK_RUN_DIR: /alignak/run
+    env_file:
+      - .env
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak:rw
+    command: "alignak-arbiter -vv -e ${ALIGNAK_CONFIGURATION_FILE}"
+
+  alignak-scheduler-master:
+    image: alignak
+    env_file:
+      - .env
+    volumes:
+      - ${ALIGNAK_DATADIR}:/alignak:rw
+    command: "alignak-scheduler -e ${ALIGNAK_CONFIGURATION_FILE} -n scheduler-master"
+
+networks:
+  default:
+    external:
+      name: ${PROXY_NETWORK}
